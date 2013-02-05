@@ -1,4 +1,3 @@
-fabric.curvedText
-=================
+### curvedText for fabric.js
 
-Curved text for fabric.js
+
