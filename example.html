@@ -15,24 +15,22 @@ canvas {  border:1px solid #000;     }
 
 <script>
 
-var toto;
-
 $(document).ready(function(){
 
   canvas = new fabric.Canvas('c');
 
-  myExample = new curvedText( canvas );
-  myExample.center();
+  Example = new CurvedText( canvas );
+  Example.center();
  
  
   $('.radius, .spacing, .rotate, .align, .fontSize').change(function(){
-    myExample.set( $(this).attr('class'), $(this).val() ) ;    
+    Example.set( $(this).attr('class'), $(this).val() ) ;    
   });
   $('.reverse').change(function(){
-    myExample.set( 'reverse', ( $(this).val() == 'true' ) ) ;    
+    Example.set( 'reverse', ( $(this).val() == 'true' ) ) ;    
   });
   $('.text').keyup(function(){
-    myExample.setText( $(this).val() ) ;
+    Example.setText( $(this).val() ) ;
   });
 
 

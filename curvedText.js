@@ -1,5 +1,5 @@
 /***** Required : http://fabricjs.com *****/
-var curvedText = (function() {
+var CurvedText = (function() {
         
     /**
      * Constructor 
@@ -7,12 +7,12 @@ var curvedText = (function() {
      * @param canvas
      * @param {object} options
      */        
-    function curvedText( canvas, options ){           
+    function CurvedText( canvas, options ){           
       // Options 
       this.opts = options || {};      
-      for ( prop in curvedText.defaults ) { 
+      for ( prop in CurvedText.defaults ) { 
          if (prop in this.opts) { continue; }
-         this.opts[prop] = curvedText.defaults[prop];
+         this.opts[prop] = CurvedText.defaults[prop];
       }      
 
       this.canvas = canvas;
@@ -27,7 +27,7 @@ var curvedText = (function() {
      * @param value
      * @return false if the param name is unknown 
      */     
-    curvedText.prototype.set = function( param, value ) {
+    CurvedText.prototype.set = function( param, value ) {
       if ( this.opts[param] !== undefined ) {
         this.opts[param] = value;        
         if ( param == 'fontSize' || param == 'fontWeight' ) {
@@ -48,7 +48,7 @@ var curvedText = (function() {
      * @param {string} param
      * @return value of param, or false if unknown 
      */      
-    curvedText.prototype.get = function( param ) {
+    CurvedText.prototype.get = function( param ) {
       if ( this.opts[param] !== undefined ) {
         return this.opts[param];  
       } else {
@@ -60,7 +60,7 @@ var curvedText = (function() {
      * @method getParams
      * @return {object} value of every options       
      */      
-    curvedText.prototype.getParams = function() {
+    CurvedText.prototype.getParams = function() {
       return this.opts;
     };
     
@@ -69,7 +69,7 @@ var curvedText = (function() {
      * @method center
      * @return {object} with top and left     
      */      
-    curvedText.prototype.center = function() {
+    CurvedText.prototype.center = function() {
       this.opts.top = this.canvas.height / 2;
       this.opts.left = this.canvas.width / 2;
       this._render();
@@ -80,7 +80,7 @@ var curvedText = (function() {
      * Remove all letters from canvas 
      * @method remove      
      */      
-    curvedText.prototype.remove = function() {
+    CurvedText.prototype.remove = function() {
       var size = this.group.size();
       for ( var i=size; i>=0; i-- ){
         this.group.remove( this.group.item(i) );
@@ -94,7 +94,7 @@ var curvedText = (function() {
      * @method setText
      * @param {string} newText
      */      
-    curvedText.prototype.setText = function( newText ) {
+    CurvedText.prototype.setText = function( newText ) {
 
       while ( newText.length != 0 && this.group.size() >= newText.length ) {
         this.group.remove( this.group.item( this.group.size()-1 ) );
@@ -121,7 +121,7 @@ var curvedText = (function() {
      * @private
      * @method _setFontStyles
      */      
-    curvedText.prototype._setFontStyles = function() {
+    CurvedText.prototype._setFontStyles = function() {
       for ( var i=0; i<this.group.size(); i++ ){
         this.group.item(i).setFontsize( this.opts.fontSize );
         this.group.item(i).fontWeight = this.opts.fontWeight ;
@@ -133,7 +133,7 @@ var curvedText = (function() {
      * @private
      * @method _render
      */       
-    curvedText.prototype._render = function() {
+    CurvedText.prototype._render = function() {
         var curAngle=0,angleRadians=0;
   
         // Calcul centrage du texte
@@ -170,7 +170,7 @@ var curvedText = (function() {
     /**
      * Default options
      */      
-    curvedText.defaults = {
+    CurvedText.defaults = {
       top:          100,
       left:         100,      
       spacing:      20,
@@ -184,5 +184,5 @@ var curvedText = (function() {
       selectable:   false
     };    
 
-    return curvedText;
+    return CurvedText;
 })();
