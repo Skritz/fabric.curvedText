@@ -19,11 +19,11 @@ $(document).ready(function(){
 
   canvas = new fabric.Canvas('c');
 
-  Example = new CurvedText( canvas );
+  Example = new CurvedText( canvas, {angle:50} );
   Example.center();
  
  
-  $('.radius, .spacing, .rotate, .align, .fontSize').change(function(){
+  $('.radius, .spacing, .align, .fontSize').change(function(){
     Example.set( $(this).attr('class'), $(this).val() ) ;    
   });
   $('.reverse').change(function(){
@@ -32,6 +32,8 @@ $(document).ready(function(){
   $('.text').keyup(function(){
     Example.setText( $(this).val() ) ;
   });
+
+
 
 
 });
@@ -46,7 +48,6 @@ $(document).ready(function(){
   <input type="text" class="text" value="Curved text"><br>
   Rayon : <input type="range"  min="0" max="100" value="50" class="radius" /><br>
   Espacement : <input type="range"  min="5" max="40" value="20" class="spacing" /><br>
-  Rotation : <input type="range"  min="-180" max="180" value="0" class="rotate" /><br>
   inverser le texte : <label><input type="radio" name="reverse" class="reverse" value="true" /> Oui</label> <label><input type="radio" name="reverse" class="reverse" value="false" checked="checked" /> Non</label><br />
   Alignement : <label><input type="radio" name="align" class="align" value="left" /> Gauche</label> <label><input type="radio" name="align" class="align" value="center" checked="checked" /> Centré</label>  <label><input type="radio" name="align" class="align" value="right" /> Droite</label><br >
   Taille du texte : <input type="range"  min="3" max="100" value="20" class="fontSize" /><br> 

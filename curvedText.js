@@ -19,7 +19,7 @@ var CurvedText = (function() {
       this.canvas = canvas;
       this.group = new fabric.Group([], {selectable: this.opts.selectable});
       this.canvas.add( this.group ) ;
-      this._forceGroupCoords();
+      this._forceGroupUpdate();
       this.setText( this.opts.text );
     }
 
@@ -39,8 +39,8 @@ var CurvedText = (function() {
         if ( param == 'selectable' ) {
           this.group.selectable = value;
         }
-        if ( param == 'top' || param == 'left' ) {
-          this._forceGroupCoords();
+        if ( param == 'angle' ) {
+          this._forceGroupUpdate();
         }
 
         this._render();
@@ -56,6 +56,7 @@ var CurvedText = (function() {
     * @return value of param, or false if unknown
     */
     CurvedText.prototype.get = function( param ) {
+      this._render();
       if ( this.opts[param] !== undefined ) {
         return this.opts[param];
       } else {
@@ -68,6 +69,7 @@ var CurvedText = (function() {
     * @return {object} value of every options
     */
     CurvedText.prototype.getParams = function() {
+      this._render();
       return this.opts;
     };
     
@@ -79,7 +81,6 @@ var CurvedText = (function() {
     CurvedText.prototype.center = function() {
       this.opts.top = this.canvas.height / 2;
       this.opts.left = this.canvas.width / 2;
-      this._forceGroupCoords();
       this._render();
       return { top:this.opts.top, left:this.opts.left };
     };
@@ -137,15 +138,18 @@ var CurvedText = (function() {
     }
 
     /**
-    * Force update group coords
+    * Force update group scale and angles
     * @private
-    * @method _forceGroupCoords
+    * @method _forceGroupUpdate
     */
-    CurvedText.prototype._forceGroupCoords = function() {
-      this.group.top = this.opts.top;
-      this.group.left = this.opts.left;
-    }
-    
+    CurvedText.prototype._forceGroupUpdate = function() {
+      this.group.setAngle( this.opts.angle ) ;
+      this.group.scaleX = this.opts.scaleX ;
+      this.group.scaleY = this.opts.scaleY ; ;
+      this._render();
+    }    
+
+
     /**
     * calculate the position and angle of each letter
     * @private
@@ -155,8 +159,14 @@ var CurvedText = (function() {
         var curAngle=0,angleRadians=0;
 
         // Object may have been moved with drag&drop
-        this.opts.top = this.group.top;
-        this.opts.left = this.group.left;
+        if ( this.group.hasMoved() ) {
+          this.opts.top = this.group.top;
+          this.opts.left = this.group.left;
+        }
+        this.opts.angle = this.group.getAngle();
+        this.opts.scaleX = this.group.scaleX;
+        this.opts.scaleY = this.group.scaleY;
+
 
         // Text align
         if ( this.opts.align == 'center' ) {
@@ -170,12 +180,12 @@ var CurvedText = (function() {
         for ( var i=0; i<this.group.size(); i++) {
           // Find coords of each letters (radians : angle*(Math.PI / 180)
           if ( this.opts.reverse ) {
-            curAngle = (-i * parseInt( this.opts.spacing )) - parseInt( this.opts.rotate ) + align;
+            curAngle = (-i * parseInt( this.opts.spacing )) + align;
             angleRadians = curAngle * (Math.PI / 180);
             this.group.item(i).set( 'top', (Math.cos( angleRadians ) * this.opts.radius) );
             this.group.item(i).set( 'left', (-Math.sin( angleRadians ) * this.opts.radius) );
           } else {
-            curAngle = (i * parseInt( this.opts.spacing )) + parseInt( this.opts.rotate ) - align;
+            curAngle = (i * parseInt( this.opts.spacing )) - align;
             angleRadians = curAngle * (Math.PI / 180);
             this.group.item(i).set( 'top', (-Math.cos( angleRadians ) * this.opts.radius) );
             this.group.item(i).set( 'left', (Math.sin( angleRadians ) * this.opts.radius) ) ;
@@ -186,12 +196,12 @@ var CurvedText = (function() {
         // Update group coords
         this.group._calcBounds()
         this.group._updateObjectsCoords()
-        
         this.group.top = this.opts.top;
         this.group.left = this.opts.left;
+        this.group.saveCoords();
 
         this.canvas.renderAll();
-    };
+    }
 
 
 
@@ -201,8 +211,10 @@ var CurvedText = (function() {
     CurvedText.defaults = {
       top: 0,
       left: 0,
+      scaleX: 1,
+      scaleY: 1,
+      angle: 0,
       spacing: 20,
-      rotate: 0,
       radius: 50,
       text: 'Curved text',
       align: 'center',
@@ -210,7 +222,7 @@ var CurvedText = (function() {
       fontSize: 20,
       fontWeight: 'normal',
       selectable: true
-    };
+    }
 
     return CurvedText;
 })();
