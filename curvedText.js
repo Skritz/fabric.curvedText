@@ -11,16 +11,19 @@ var CurvedText = (function() {
 
       // Options
       this.opts = options || {};
-      for ( var prop in CurvedText.defaults ) {
+      for ( prop in CurvedText.defaults ) {
          if (prop in this.opts) { continue; }
          this.opts[prop] = CurvedText.defaults[prop];
       }
-
       this.canvas = canvas;
-      this.group = new fabric.Group([], {selectable: this.opts.selectable});
+      this.group = new fabric.Group([], {
+        selectable: this.opts.selectable,
+        hasControls: this.opts.hasControls
+      });
       this.canvas.add( this.group ) ;
-      this._forceGroupUpdate();
-      this.setText( this.opts.text );
+
+      this._forceGroupCoords();
+      this.set( 'text', this.opts.text );
     }
 
 
@@ -30,23 +33,33 @@ var CurvedText = (function() {
     * @param value
     * @return false if the param name is unknown
     */
-    CurvedText.prototype.set = function( param, value ) {
-      if ( this.opts[param] !== undefined ) {
-        this.opts[param] = value;
-        if ( param === 'fontSize' || param === 'fontWeight' ) {
-          this._setFontStyles();
-        }
-        if ( param === 'selectable' ) {
-          this.group.selectable = value;
-        }
-        if ( param === 'angle' ) {
-          this._forceGroupUpdate();
-        }
+    CurvedText.prototype.set = function( param, value, render ) {
 
-        this._render();
-        return true;
+      if ( typeof param == "object" ) {
+        for ( var i in param ) {
+          this.set( i, param[i], false );
+        }
       } else {
-        return false;
+        if ( this.opts[param] !== undefined ) {
+          this.opts[param] = value;
+          if ( param === 'fontSize' || param === 'fontWeight' || param === 'fill' || param === 'fontFamily' ) {
+            this._setFontStyles();
+          }
+          if ( param === 'selectable' ) {
+            this.group.selectable = value;
+          }
+          if ( param === 'top' || param === 'left' ) {
+            this._forceGroupCoords();
+          }
+          if ( param === 'text' ) {
+            this.setText( value );
+          }
+
+        }
+      }
+
+      if ( render === undefined || render !== false ) {
+        this._render();
       }
     };
     
@@ -56,7 +69,6 @@ var CurvedText = (function() {
     * @return value of param, or false if unknown
     */
     CurvedText.prototype.get = function( param ) {
-      this._render();
       if ( this.opts[param] !== undefined ) {
         return this.opts[param];
       } else {
@@ -69,22 +81,10 @@ var CurvedText = (function() {
     * @return {object} value of every options
     */
     CurvedText.prototype.getParams = function() {
-      this._render();
       return this.opts;
     };
     
-    /**
-    * Center the group in canvas
-    * @method center
-    * @return {object} with top and left
-    */
-    CurvedText.prototype.center = function() {
-      this.opts.top = this.canvas.height / 2;
-      this.opts.left = this.canvas.width / 2;
-      this._render();
-      return { top:this.opts.top, left:this.opts.left };
-    };
-    
+
     /**
     * Remove all letters from canvas
     * @method remove
@@ -94,6 +94,7 @@ var CurvedText = (function() {
       for ( var i=size; i>=0; i-- ){
         this.group.remove( this.group.item(i) );
       }
+      this.canvas.remove( this.group );
       this.canvas.renderAll();
     };
     
@@ -104,19 +105,24 @@ var CurvedText = (function() {
     */
     CurvedText.prototype.setText = function( newText ) {
 
-      while ( newText.length !== 0 && this.group.size() >= newText.length ) {
+      while ( this.group.size() > newText.length ) {
         this.group.remove( this.group.item( this.group.size()-1 ) );
       }
       
-      for ( var i=0; i<newText.length; i++ ){
-        if ( this.group.item(i) === undefined ){
-          var letter = new fabric.Text(newText[i], {
-            selectable: true
-          });
-          this.group.add( letter );
-        }
-        else{
-          this.group.item(i).text = newText[i];
+      if ( newText.length > 0 ) {
+        for ( var i=0; i<newText.length; i++ ){
+          if ( this.group.item(i) == undefined ){
+            var letter = new fabric.Text(newText[i], {
+              selectable: false,
+              centeredRotation: true,
+              originX: 'center',
+              originY: 'center'
+            });
+            this.group.add( letter );
+          }
+          else{
+            this.group.item(i).text = newText[i];
+          }
         }
       }
       this.opts.text = newText;
@@ -130,74 +136,136 @@ var CurvedText = (function() {
     * @method _setFontStyles
     */
     CurvedText.prototype._setFontStyles = function() {
-      for ( var i=0; i<this.group.size(); i++ ){
-        this.group.item(i).setFontsize( this.opts.fontSize );
-        this.group.item(i).fontWeight = this.opts.fontWeight ;
+      if ( this.group.size() > 0 ) {
+        for ( var i=0; i<this.group.size(); i++ ){
+          this.group.item(i).set({
+            fontSize: this.opts.fontSize,
+            lineHeight: 1,
+            fontWeight: this.opts.fontWeight,
+            fontFamily: this.opts.fontFamily,
+            fill: this.opts.fill
+          });
+        }
       }
     };
 
     /**
-    * Force update group scale and angles
+    * Force update group coords
     * @private
-    * @method _forceGroupUpdate
+    * @method _forceGroupCoords
     */
-    CurvedText.prototype._forceGroupUpdate = function() {
-      this.group.setAngle( this.opts.angle );
-      this.group.scaleX = this.opts.scaleX;
-      this.group.scaleY = this.opts.scaleY;
-      this._render();
+    CurvedText.prototype._forceGroupCoords = function() {
+      this.group.top = this.opts.top;
+      this.group.left = this.opts.left;
     };
 
-
+    
+    /**
+     * @method on
+     */
+    CurvedText.prototype.on = function( event, callback ){
+      this.group.on( event, callback );
+    };
+    
     /**
     * calculate the position and angle of each letter
     * @private
     * @method _render
     */
     CurvedText.prototype._render = function() {
-        var curAngle=0,angleRadians=0, align=0;
+        var _self=this, curAngle=0,angleRadians=0, top, left, radiusX, radiusY, rx, ry, items = [], align;
 
         // Object may have been moved with drag&drop
-        if ( this.group.hasMoved() ) {
-          this.opts.top = this.group.top;
-          this.opts.left = this.group.left;
+        this.opts.top = this.group.top;
+        this.opts.left = this.group.left;
+
+        if ( this.opts.radiusX === null ) {
+          radiusX = this.opts.radius;
+        } else {
+          radiusX = this.opts.radiusX;
         }
-        this.opts.angle = this.group.getAngle();
-        this.opts.scaleX = this.group.scaleX;
-        this.opts.scaleY = this.group.scaleY;
+        if ( this.opts.radiusY === null ) {
+          radiusY = this.opts.radius;
+        } else {
+          radiusY = this.opts.radiusY;
+        }
+
+        radiusX = parseInt(radiusX) - (this.opts.fontSize / 2);
+        radiusY = parseInt(radiusY) - (this.opts.fontSize / 2);
 
 
-        // Text align
-        if ( this.opts.align === 'center' ) {
-          align = ( this.opts.spacing / 2) * ( this.group.size() - 1) ;
-        } else if ( this.opts.align === 'right' ) {
-          align = ( this.opts.spacing ) * ( this.group.size() - 1) ;
-        }
-        
-        for ( var i=0; i<this.group.size(); i++) {
-          // Find coords of each letters (radians : angle*(Math.PI / 180)
-          if ( this.opts.reverse ) {
-            curAngle = (-i * parseInt( this.opts.spacing, 10 )) + align;
-            angleRadians = curAngle * (Math.PI / 180);
-            this.group.item(i).set( 'top', (Math.cos( angleRadians ) * this.opts.radius) );
-            this.group.item(i).set( 'left', (-Math.sin( angleRadians ) * this.opts.radius) );
+        if ( this.group.size() > 0 ) {
+          // Text align
+          if ( this.opts.align == 'center' ) {
+            align = (this.opts.spacing / 2) * (this.group.size() - 1) ;
+          } else if ( this.opts.align == 'right' ) {
+            align = (this.opts.spacing) * (this.group.size() - 1) ;
           } else {
-            curAngle = (i * parseInt( this.opts.spacing, 10)) - align;
-            angleRadians = curAngle * (Math.PI / 180);
-            this.group.item(i).set( 'top', (-Math.cos( angleRadians ) * this.opts.radius) );
-            this.group.item(i).set( 'left', (Math.sin( angleRadians ) * this.opts.radius) ) ;
+            align = 0;
           }
-          this.group.item(i).setAngle( curAngle );
+          
+          this.group.forEachObject(function(a, i) {
+            items[i] = a;
+            _self.group.removeWithUpdate(a);
+          }); 
+
+          this.canvas.remove( this.group );
+
+
+          for ( var i=0; i<items.length; i++ ) {
+            rx = radiusX;
+            ry = radiusY;
+            // Find coords of each letters (radians : angle*(Math.PI / 180)
+            curAngle = (i * parseInt( this.opts.spacing )) + parseInt( this.opts.rotate ) - align;
+            angleRadians = curAngle * (Math.PI / 180);
+            left = Math.sin( angleRadians ) * rx;
+            top = -Math.cos( angleRadians ) * ry;
+
+            if ( radiusX != radiusY ) {
+              var ratioX = rx / ( rx + ry ),
+                  ratioY = ry / ( rx + ry ),
+                  pct_left = Math.abs( left / rx ),
+                  pct_top = Math.abs( -top / ry ),
+                  ajustedAngle = ( (ratioY * 90 * pct_left) + ( ratioX * 90 * (1-pct_top)));
+              if ( left < 0 ) {
+                ajustedAngle = -ajustedAngle;
+              }
+              if ( -top < 0 ) {
+                ajustedAngle = 180 - ajustedAngle;
+              } 
+              curAngle = ajustedAngle;
+            }
+          
+            if ( this.opts.reverse ) {
+              curAngle = -curAngle;
+              top = -top;
+              //console.log( 'top', top, 'angle', curAngle );
+            }
+            
+            items[i].set({
+              'top': top,
+              'left': left,
+              'angle': curAngle
+            });
+
+            if ( this.opts.selectable ) {
+              this.group.addWithUpdate( items[i] );  
+            } else {
+              this.group.add( items[i] );
+            }
+          }
         }
+
         
         // Update group coords
-        this.group._calcBounds();
-        this.group._updateObjectsCoords();
-        this.group.top = this.opts.top;
-        this.group.left = this.opts.left;
-        this.group.saveCoords();
+        this.group.set({
+          top: this.opts.top,
+          left: this.opts.left
+        });
 
+        this.group.forEachObject(function(o){ o.set( 'active', false ); });
         this.canvas.renderAll();
+        this.canvas.add(this.group);
     };
 
 
@@ -208,18 +276,22 @@ var CurvedText = (function() {
     CurvedText.defaults = {
       top: 0,
       left: 0,
-      scaleX: 1,
-      scaleY: 1,
-      angle: 0,
       spacing: 20,
+      rotate: 0,
       radius: 50,
+      radiusX: null,
+      radiusY: null,
       text: 'Curved text',
       align: 'center',
       reverse: false,
       fontSize: 20,
       fontWeight: 'normal',
-      selectable: true
+      fontFamily: 'Arial',
+      fill: '#000',
+      selectable: true,
+      hasControls: false
     };
 
     return CurvedText;
 })();
+
