@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+ <meta charset="utf-8">
   <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
   
-  <script type="text/javascript" src="fabric.js"></script>
+  <script type="text/javascript" src="fabric.min.js"></script>
   <script type="text/javascript" src="curvedText.js"></script> 
 
 <style type="text/css">
@@ -15,16 +16,17 @@ canvas {  border:1px solid #000;     }
 
 <script>
 
+var Example;
+
 $(document).ready(function(){
 
   canvas = new fabric.Canvas('c');
 
-  Example = new CurvedText( canvas, {angle:50} );
-  Example.center();
+  Example = new CurvedText( canvas, {top:70,  left:150} );
  
  
-  $('.radius, .spacing, .align, .fontSize').change(function(){
-    Example.set( $(this).attr('class'), $(this).val() ) ;    
+  $('.radiusX, .radiusY, .spacing, .rotate, .align, .fontSize').change(function(){
+    Example.set( $(this).attr('class'), $(this).val() , true ) ;    
   });
   $('.reverse').change(function(){
     Example.set( 'reverse', ( $(this).val() == 'true' ) ) ;    
@@ -32,9 +34,6 @@ $(document).ready(function(){
   $('.text').keyup(function(){
     Example.setText( $(this).val() ) ;
   });
-
-
-
 
 });
 
@@ -46,10 +45,12 @@ $(document).ready(function(){
   <canvas id="c" width="400" height="200"></canvas>
   <br>
   <input type="text" class="text" value="Curved text"><br>
-  Rayon : <input type="range"  min="0" max="100" value="50" class="radius" /><br>
+  Rayon x :<input type="range"  min="0" max="100" value="50" class="radiusX" /><br>
+  Rayon y :<input type="range"  min="0" max="100" value="50" class="radiusY" /><br>
   Espacement : <input type="range"  min="5" max="40" value="20" class="spacing" /><br>
+  Rotation : <input type="range"  min="-180" max="180" value="0" class="rotate" /><br>
   inverser le texte : <label><input type="radio" name="reverse" class="reverse" value="true" /> Oui</label> <label><input type="radio" name="reverse" class="reverse" value="false" checked="checked" /> Non</label><br />
-  Alignement : <label><input type="radio" name="align" class="align" value="left" /> Gauche</label> <label><input type="radio" name="align" class="align" value="center" checked="checked" /> Centré</label>  <label><input type="radio" name="align" class="align" value="right" /> Droite</label><br >
+  Alignement : <label><input type="radio" name="align" class="align" value="left" /> Gauche</label> <label><input type="radio" name="align" class="align" value="center" checked="checked" /> CentrÃ©</label>  <label><input type="radio" name="align" class="align" value="right" /> Droite</label><br >
   Taille du texte : <input type="range"  min="3" max="100" value="20" class="fontSize" /><br> 
 
 </body>
