@@ -206,6 +206,9 @@ var CurvedText = (function() {
           
           this.group.forEachObject(function(a, i) {
             items[i] = a;
+          }); 
+
+          items.forEach(function (a) {
             _self.group.removeWithUpdate(a);
           }); 
 
